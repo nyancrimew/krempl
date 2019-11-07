@@ -17,3 +17,4 @@
 /.idea/*.xml
 !/.idea/saveactions_settings.xml
 /.idea/.name
+**/.krempl/

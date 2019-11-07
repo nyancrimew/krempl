@@ -4,8 +4,7 @@ import ch.deletescape.krempl.KremplEnvironment
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.GroupableOption
 import com.github.ajalt.clikt.core.ParameterHolder
-import com.github.ajalt.clikt.parameters.arguments.argument
-import kotlin.reflect.KProperty
+import org.jline.terminal.Terminal
 
 
 abstract class Command(
@@ -21,8 +20,9 @@ abstract class Command(
     @PublishedApi
     internal val cliktCommand =
         CliktWrapper(name, help, epilog, invokeWithoutSubcommand, printHelpOnEmptyArgs, helpTags, autoCompleteEnvvar)
-    protected lateinit var env: KremplEnvironment
+    lateinit var env: KremplEnvironment
         private set
+    internal lateinit var term: Terminal
 
     init {
         if (name.isBlank()) throw IllegalArgumentException("Command name cannot be empty")
@@ -30,14 +30,24 @@ abstract class Command(
 
     abstract fun execute()
 
-    internal fun onRegister(env: KremplEnvironment) {
+    /**
+     * Close terminal and exit with the provided exit code
+     */
+    fun exit(code: Int = 0) {
+        env.exitCode = code
+        term.close()
+    }
+
+    internal fun onRegister(env: KremplEnvironment, term: Terminal) {
         this.env = env
+        this.term = term
     }
 
     override fun registerOption(option: GroupableOption) {
         cliktCommand.registerOption(option)
     }
 
+    @PublishedApi
     internal inner class CliktWrapper(
         name: String,
         help: String = "",

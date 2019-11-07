@@ -1,12 +1,20 @@
 package ch.deletescape.krempl
 
+import ch.deletescape.krempl.builtins.Builtins
+import ch.deletescape.krempl.builtins.exit
+import ch.deletescape.krempl.command.Command
 import ch.deletescape.krempl.prompt.Prompt
+import ch.deletescape.krempl.utils.expandHome
 import ch.deletescape.krempl.utils.terminal
+import org.jline.builtins.Commands
 import org.jline.terminal.TerminalBuilder
 
 data class KremplConfig(
-    var term: TerminalBuilder,
-    var prompt: Prompt
+    var name: String = DEFAULT_NAME,
+    var term: TerminalBuilder = DEFAULT_TERM,
+    var prompt: Prompt = Prompt.Default,
+    var kremplDir: String = expandHome("~/.krempl"),
+    var commands: MutableSet<Command> = mutableSetOf(Builtins.exit())
 ) {
     inline fun term(crossinline block: TerminalBuilder.() -> Unit) {
         term = terminal(term, block)
@@ -20,26 +28,22 @@ data class KremplConfig(
         this.prompt = Prompt(prompt)
     }
 
-    var name: String
-        get() = term.build().name
-        set(value) {
-            term.name(value)
-        }
+    fun commands(vararg commands: Command) {
+        this.commands.addAll(commands.toMutableSet())
+    }
 
     companion object {
-        val DEFAULT = KremplConfig(
-            term = terminal {
-                name("Krempl")
-                system(true)
-                jna(true)
-            },
-            prompt = Prompt.Default
-        )
+        val DEFAULT_NAME = "Krempl"
+        val DEFAULT_TERM = terminal {
+            name(DEFAULT_NAME)
+            system(true)
+            jna(true)
+        }
     }
 }
 
-inline fun config(parent: KremplConfig? = null, crossinline block: KremplConfig.() -> Unit): KremplConfig {
-    val config = parent ?: KremplConfig.DEFAULT
+inline fun config(crossinline block: KremplConfig.() -> Unit): KremplConfig {
+    val config = KremplConfig()
     block(config)
     return config
 }

@@ -32,3 +32,5 @@ fun Terminal.readLine(prompt: String = "", hidden: Boolean = false): String {
     echo(prompt)
     return lineReader().readLine(if (hidden) '*' else null)
 }
+
+val LineReader.rawLine get() = parsedLine.line()

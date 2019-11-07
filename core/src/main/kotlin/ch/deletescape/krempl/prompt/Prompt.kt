@@ -6,7 +6,7 @@ inline class Prompt(val create: KremplEnvironment.() -> String) {
     constructor(prompt: String) : this({ prompt })
     companion object {
         val Default = Prompt {
-            "$user@$hostname $name $pwd > "
+            "$user@$hostname $name ${collapseHome(pwd)} > "
         }
     }
 }

@@ -1,3 +1,11 @@
+plugins {
+    application
+}
+
+application {
+    mainClassName = "main.MainKt"
+}
+
 dependencies {
-    implementation(project(":core"))
+    compile(project(":core"))
 }
