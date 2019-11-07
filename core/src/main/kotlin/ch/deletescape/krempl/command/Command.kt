@@ -4,6 +4,7 @@ import ch.deletescape.krempl.KremplEnvironment
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.GroupableOption
 import com.github.ajalt.clikt.core.ParameterHolder
+import org.jline.reader.EndOfFileException
 import org.jline.terminal.Terminal
 
 
@@ -36,6 +37,8 @@ abstract class Command(
     fun exit(code: Int = 0) {
         env.exitCode = code
         term.close()
+        // FIXME: TERRIBLE HACK
+        throw EndOfFileException()
     }
 
     internal fun onRegister(env: KremplEnvironment, term: Terminal) {
@@ -45,6 +48,14 @@ abstract class Command(
 
     override fun registerOption(option: GroupableOption) {
         cliktCommand.registerOption(option)
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return other is Command && name == other.name
+    }
+
+    override fun hashCode(): Int {
+        return "command-$name".hashCode()
     }
 
     @PublishedApi

@@ -30,11 +30,12 @@ class Krempl constructor(private val config: KremplConfig = KremplConfig()) {
     val term = config.term.build()
     val env = KremplEnvironment(config)
     val prompt = config.prompt
+    // Setup reader with our defaults
     val reader = LineReaderBuilder.builder()
         .expander(KremplExpander(env))
         .option(LineReader.Option.AUTO_FRESH_LINE, true)
         .variable(LineReader.SECONDARY_PROMPT_PATTERN, ">")
-        .variable(LineReader.HISTORY_FILE, ".krempl/history")
+        .variable(LineReader.HISTORY_FILE, env.kremplFile("history"))
         .terminal(term)
         .build()
     val registry = CommandRegistry(term, env)
@@ -49,7 +50,7 @@ class Krempl constructor(private val config: KremplConfig = KremplConfig()) {
         reader.autosuggestion = LineReader.SuggestionType.HISTORY
         while (true) {
             try {
-                val line = reader.readLine(prompt.create(env))
+                val line = reader.readLine(prompt.create(env, term))
                 val pl = reader.parser.parse(line, 0)
                 registry.parseAndDispatch(pl.words())
             } catch (e: PrintHelpMessage) {

@@ -37,4 +37,5 @@ class KremplEnvironment(config: KremplConfig) {
 
     fun collapseHome(path: String) = if (path.startsWith(homeDir)) path.replaceFirst(homeDir, "~") else path
     fun resolvePath(path: String) = File(pwd).resolve(expandHome(path)).normalize().toString()
+    fun kremplFile(path: String) = File(kremplDir).resolve(path)
 }

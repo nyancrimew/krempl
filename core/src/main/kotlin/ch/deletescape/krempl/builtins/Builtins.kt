@@ -6,11 +6,13 @@ import ch.deletescape.krempl.command.echo
 class Builtins {
     companion object {
         fun all() = listOf(
+            echo(),
             exit(),
             pwd(),
             whoami(),
             cd()
         )
+
         fun pwd() = command("pwd") {
             action {
                 echo(env.pwd)
