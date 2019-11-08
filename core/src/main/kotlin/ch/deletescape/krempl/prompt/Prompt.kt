@@ -1,12 +1,9 @@
 package ch.deletescape.krempl.prompt
 
 import ch.deletescape.krempl.KremplEnvironment
-import ch.deletescape.krempl.utils.brightBlueFg
-import ch.deletescape.krempl.utils.convert
-import ch.deletescape.krempl.utils.style
+import ch.deletescape.krempl.utils.*
 import org.jline.terminal.Terminal
 import org.jline.utils.AttributedCharSequence
-import org.jline.utils.AttributedString
 
 inline class Prompt(inline val create: KremplEnvironment.() -> CharSequence) {
     constructor(prompt: CharSequence) : this({ prompt })
@@ -20,7 +17,9 @@ inline class Prompt(inline val create: KremplEnvironment.() -> CharSequence) {
 
     companion object {
         val Default = Prompt {
-            "$user@$hostname $name ${collapseHome(pwd)} > " style brightBlueFg
+            "$user@$hostname " { bold(); fg = Color.LIGHT_GREEN } +
+                    name { fg = Color.BLUE; faint() } + " " +
+                    collapseHome(pwd).style { fg = Color.LIGHT_YELLOW } + " > "
         }
     }
 }

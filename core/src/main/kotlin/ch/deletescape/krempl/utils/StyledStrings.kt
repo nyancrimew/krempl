@@ -2,111 +2,228 @@ package ch.deletescape.krempl.utils
 
 import org.jline.utils.AttributedString
 import org.jline.utils.AttributedStyle
-import org.jline.utils.AttributedStyle.*
-
-typealias StyleTransformer = AttributedStyle.() -> AttributedStyle
-
-// Styles
-@PublishedApi
-internal inline val default: AttributedStyle
-    get() = DEFAULT
-
-val bold: StyleTransformer = { bold() }
-val boldOff: StyleTransformer = { boldOff() }
-val boldDefault: StyleTransformer = { boldDefault() }
-
-val faint: StyleTransformer = { faint() }
-val faintOff: StyleTransformer = { faintOff() }
-val faintDefault: StyleTransformer = { faintDefault() }
-
-val italic: StyleTransformer = { italic() }
-val italicOff: StyleTransformer = { italicOff() }
-val italicDefault: StyleTransformer = { italicDefault() }
-
-val underline: StyleTransformer = { underline() }
-val underlineOff: StyleTransformer = { underlineOff() }
-val underlineDefault: StyleTransformer = { underlineDefault() }
-
-val blink: StyleTransformer = { blink() }
-val blinkOff: StyleTransformer = { blinkOff() }
-val blinkDefault: StyleTransformer = { blinkDefault() }
-
-val inverse: StyleTransformer = { inverse() }
-val inverseNeg: StyleTransformer = { inverseNeg() }
-val inverseOff: StyleTransformer = { inverseOff() }
-val inverseDefault: StyleTransformer = { inverseDefault() }
-
-val conceal: StyleTransformer = { conceal() }
-val concealOff: StyleTransformer = { concealOff() }
-val concealDefault: StyleTransformer = { concealDefault() }
-
-val crossedOut: StyleTransformer = { crossedOut() }
-val crossedOutOff: StyleTransformer = { crossedOutOff() }
-val crossedOutDefault: StyleTransformer = { crossedOutDefault() }
-
-val hidden: StyleTransformer = { hidden() }
-val hiddenOff: StyleTransformer = { hiddenOff() }
-val hiddenDefault: StyleTransformer = { hiddenDefault() }
-
 
 // Colors
-val blackFg: StyleTransformer = { foreground(BLACK) }
-val blackBg: StyleTransformer = { background(BLACK) }
+enum class Color(internal val color: Int) {
+    BLACK(AttributedStyle.BLACK),
+    GRAY(AttributedStyle.BRIGHT + AttributedStyle.BLACK),
+    RED(AttributedStyle.RED),
+    LIGHT_RED(AttributedStyle.BRIGHT + AttributedStyle.RED),
+    GREEN(AttributedStyle.GREEN),
+    LIGHT_GREEN(AttributedStyle.BRIGHT + AttributedStyle.GREEN),
+    YELLOW(AttributedStyle.YELLOW),
+    LIGHT_YELLOW(AttributedStyle.BRIGHT + AttributedStyle.YELLOW),
+    BLUE(AttributedStyle.BLUE),
+    LIGHT_BLUE(AttributedStyle.BRIGHT + AttributedStyle.BLUE),
+    MAGENTA(AttributedStyle.MAGENTA),
+    LIGHT_MAGENTA(AttributedStyle.BRIGHT + AttributedStyle.MAGENTA),
+    CYAN(AttributedStyle.CYAN),
+    LIGHT_CYAN(AttributedStyle.BRIGHT + AttributedStyle.CYAN),
+    WHITE(AttributedStyle.WHITE),
 
-val grayFg: StyleTransformer = { foreground(BLACK + BRIGHT) }
-val grayBg: StyleTransformer = { background(BLACK + BRIGHT) }
+    DEFAULT(-1),
+    OFF(-2)
+}
 
-val redFg: StyleTransformer = { foreground(RED) }
-val redBg: StyleTransformer = { background(RED) }
-val brightRedFg: StyleTransformer = { foreground(RED + BRIGHT) }
-val brightRedBg: StyleTransformer = { background(RED + BRIGHT) }
+// Style DSL
+class Styler(var style: AttributedStyle = Styles.DEFAULT) {
+    inline fun bold() {
+        style = style.bold()
+    }
 
-val greenFg: StyleTransformer = { foreground(GREEN) }
-val greenBg: StyleTransformer = { background(GREEN) }
-val brightGreenFg: StyleTransformer = { foreground(GREEN + BRIGHT) }
-val brightGreenBg: StyleTransformer = { background(GREEN + BRIGHT) }
+    inline fun boldOff() {
+        style = style.boldOff()
+    }
 
-val yellowFg: StyleTransformer = { foreground(YELLOW) }
-val yellowBg: StyleTransformer = { background(YELLOW) }
-val brightYellowFg: StyleTransformer = { foreground(YELLOW + BRIGHT) }
-val brightYellowBg: StyleTransformer = { background(YELLOW + BRIGHT) }
+    inline fun boldDefault() {
+        style = style.boldDefault()
+    }
 
-val blueFg: StyleTransformer = { foreground(BLUE) }
-val blueBg: StyleTransformer = { background(BLUE) }
-val brightBlueFg: StyleTransformer = { foreground(BLUE + BRIGHT) }
-val brightBlueBg: StyleTransformer = { background(BLUE + BRIGHT) }
+    inline fun faint() {
+        style = style.faint()
+    }
 
-val magentaFg: StyleTransformer = { foreground(MAGENTA) }
-val magentaBg: StyleTransformer = { background(MAGENTA) }
-val brightMagentaFg: StyleTransformer = { foreground(MAGENTA + BRIGHT) }
-val brightMagentaBg: StyleTransformer = { background(MAGENTA + BRIGHT) }
+    inline fun faintOff() {
+        style = style.faintOff()
+    }
 
-val cyanFg: StyleTransformer = { foreground(CYAN) }
-val cyanBg: StyleTransformer = { background(CYAN) }
-val brightCyanFg: StyleTransformer = { foreground(CYAN + BRIGHT) }
-val brightCyanBg: StyleTransformer = { background(CYAN + BRIGHT) }
+    inline fun faintDefault() {
+        style = style.faintDefault()
+    }
 
-val whiteFg: StyleTransformer = { foreground(WHITE) }
-val whiteBg: StyleTransformer = { background(WHITE) }
+    inline fun italic() {
+        style = style.italic()
+    }
 
-val defaultFg: StyleTransformer = { foregroundDefault() }
-val defaultBg: StyleTransformer = { backgroundDefault() }
+    inline fun italicOff() {
+        style = style.italicOff()
+    }
 
-val foregroundOff: StyleTransformer = { foregroundOff() }
-val backgroundOff: StyleTransformer = { backgroundOff() }
+    inline fun italicDefault() {
+        style = style.italicDefault()
+    }
 
-fun foreground(color: Int): StyleTransformer = { foreground(color) }
-fun background(color: Int): StyleTransformer = { background(color) }
+    inline fun underline() {
+        style = style.underline()
+    }
+
+    inline fun underlineOff() {
+        style = style.underlineOff()
+    }
+
+    inline fun underlineDefault() {
+        style = style.underlineDefault()
+    }
+
+    inline fun blink() {
+        style = style.blink()
+    }
+
+    inline fun blinkOff() {
+        style = style.blinkOff()
+    }
+
+    inline fun blinkDefault() {
+        style = style.blinkDefault()
+    }
+
+    inline fun inverse() {
+        style = style.inverse()
+    }
+
+    inline fun inverseOff() {
+        style = style.inverseOff()
+    }
+
+    inline fun inverseDefault() {
+        style = style.inverseDefault()
+    }
+
+    inline fun inverseNeg() {
+        style = style.inverseNeg()
+    }
+
+    inline fun conceal() {
+        style = style.conceal()
+    }
+
+    inline fun concealOff() {
+        style = style.concealOff()
+    }
+
+    inline fun concealDefault() {
+        style = style.concealDefault()
+    }
+
+    inline fun crossedOut() {
+        style = style.crossedOut()
+    }
+
+    inline fun crossedOutOff() {
+        style = style.crossedOutOff()
+    }
+
+    inline fun crossedOutDefault() {
+        style = style.crossedOutDefault()
+    }
+
+    inline fun hidden() {
+        style = style.hidden()
+    }
+
+    inline fun hiddenOff() {
+        style = style.hiddenOff()
+    }
+
+    inline fun hiddenDefault() {
+        style = style.hiddenDefault()
+    }
+
+    // Foreground / background colors
+
+    var foreground: Color = Color.DEFAULT
+        set(color) {
+            style = when (color) {
+                Color.OFF -> style.foregroundOff()
+                Color.DEFAULT -> style.foregroundDefault()
+                else -> style.foreground(color.color)
+            }
+            field = color
+        }
+
+    inline var fg: Color
+        get() = foreground
+        set(value) {
+            foreground = value
+        }
+
+    inline fun foregroundDefault() {
+        style = style.foregroundDefault()
+    }
+
+    inline fun foregroundOff() {
+        style = style.foregroundOff()
+    }
+
+    var background: Color = Color.DEFAULT
+        set(color) {
+            style = when (color) {
+                Color.OFF -> style.backgroundOff()
+                Color.DEFAULT -> style.backgroundDefault()
+                else -> style.background(color.color)
+            }
+            field = color
+        }
+
+    inline var bg: Color
+        get() = background
+        set(value) {
+            background = value
+        }
+
+    inline fun backgroundDefault() {
+        style = style.backgroundDefault()
+    }
+
+    inline fun backgroundOff() {
+        style = style.backgroundOff()
+    }
+
+    inline fun colorsDefault() {
+        backgroundDefault()
+        faintDefault()
+    }
+}
 
 // Predefined styles
-inline val error: StyleTransformer get() = redFg
+object Styles {
+    @JvmField
+    val DEFAULT = AttributedStyle.DEFAULT
+    @JvmField
+    val BOLD = AttributedStyle.BOLD
+    @JvmField
+    val ERROR = styler {
+        fg = Color.RED
+    }
+}
 
-inline operator fun StyleTransformer.plus(crossinline other: StyleTransformer): StyleTransformer =
-    { this.this@plus().other() }
+inline fun CharSequence.error() = style(Styles.ERROR)
 
-inline operator fun AttributedStyle.plus(transform: StyleTransformer): AttributedStyle = transform(this)
+inline fun styler(parent: AttributedStyle = Styles.DEFAULT, crossinline block: Styler.() -> Unit): AttributedStyle {
+    val styler = Styler(parent)
+    block(styler)
+    return styler.style
+}
 
+inline infix fun CharSequence.style(crossinline block: Styler.() -> Unit) = AttributedString(this, styler(block = block))
 inline infix fun CharSequence.style(style: AttributedStyle) = AttributedString(this, style)
-inline infix fun CharSequence.style(crossinline transform: StyleTransformer) = style(default + transform)
 
-inline fun CharSequence.error() = style(error)
+inline operator fun CharSequence.invoke(crossinline block: Styler.() -> Unit) = style(block)
+
+inline fun CharSequence.toAttributedString() = AttributedString(this, Styles.DEFAULT)
+
+inline operator fun AttributedString.plus(str: CharSequence) = this + str.toAttributedString()
+inline operator fun CharSequence.plus(attributedString: AttributedString) = toAttributedString() + attributedString
+operator fun AttributedString.plus(other: AttributedString): AttributedString =
+    AttributedString.join("".toAttributedString(), this, other)
+
