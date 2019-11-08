@@ -18,11 +18,6 @@ import org.jline.reader.LineReader
 import org.jline.reader.LineReaderBuilder
 import org.jline.reader.UserInterruptException
 import org.jline.reader.impl.DefaultParser
-import org.jline.reader.impl.LineReaderImpl
-import org.jline.utils.Log
-import java.util.logging.Level
-import java.util.logging.Logger
-import kotlin.system.exitProcess
 
 class Krempl constructor(private val config: KremplConfig = KremplConfig()) {
     constructor(block: KremplConfig.() -> Unit) : this(config(block = block))

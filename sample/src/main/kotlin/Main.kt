@@ -6,11 +6,7 @@ import kotlin.system.exitProcess
 
 fun main() {
     val code = Krempl {
-        commands(
-            Builtins.echo(),
-            Builtins.pwd(),
-            Builtins.nano()
-        )
+        commands(Builtins.all)
     }.start()
     if (code != 0) {
         exitProcess(code)

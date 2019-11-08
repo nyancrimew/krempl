@@ -5,13 +5,20 @@ import ch.deletescape.krempl.command.echo
 
 class Builtins {
     companion object {
-        fun all() = listOf(
-            echo(),
+        @JvmField
+        val base = setOf(
             exit(),
+            help()
+        )
+
+        @JvmField
+        val all = base + setOf(
+            echo(),
             pwd(),
             whoami(),
             cd()
         )
+
 
         fun pwd() = command("pwd") {
             action {

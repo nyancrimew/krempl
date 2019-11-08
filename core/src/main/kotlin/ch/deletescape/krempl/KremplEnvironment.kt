@@ -1,5 +1,6 @@
 package ch.deletescape.krempl
 
+import ch.deletescape.krempl.command.CommandRegistry
 import ch.deletescape.krempl.utils.expandHome
 import ch.deletescape.krempl.utils.sysProp
 import com.kstruct.gethostname4j.Hostname
@@ -38,4 +39,8 @@ class KremplEnvironment(config: KremplConfig) {
     fun collapseHome(path: String) = if (path.startsWith(homeDir)) path.replaceFirst(homeDir, "~") else path
     fun resolvePath(path: String) = File(pwd).resolve(expandHome(path)).normalize().toString()
     fun kremplFile(path: String) = File(kremplDir).resolve(path)
+
+
+    // Krempl internal properties
+    internal lateinit var registry: CommandRegistry
 }

@@ -68,6 +68,7 @@ abstract class Command(
         helpTags: Map<String, String> = emptyMap(),
         autoCompleteEnvvar: String? = ""
     ) : CliktCommand(help, epilog, name, invokeWithoutSubcommand, printHelpOnEmptyArgs, helpTags, autoCompleteEnvvar) {
+        internal val shortHelp get() = shortHelp()
         override fun run() {
             this@Command.execute()
         }

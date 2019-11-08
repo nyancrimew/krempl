@@ -14,7 +14,7 @@ data class KremplConfig(
     var term: TerminalBuilder = DEFAULT_TERM,
     var prompt: Prompt = Prompt.Default,
     var kremplDir: String = expandHome("~/.krempl"),
-    var commands: MutableSet<Command> = mutableSetOf(Builtins.exit())
+    var commands: Set<Command> = Builtins.base
 ) {
     inline fun term(crossinline block: TerminalBuilder.() -> Unit) {
         term = terminal(term, block)
@@ -29,7 +29,11 @@ data class KremplConfig(
     }
 
     fun commands(vararg commands: Command) {
-        this.commands.addAll(commands.toMutableSet())
+        this.commands += commands
+    }
+
+    fun commands(commands: Iterable<Command>) {
+        this.commands += commands
     }
 
     companion object {

@@ -6,15 +6,23 @@ import ch.deletescape.krempl.utils.readLine
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.*
 import com.github.ajalt.clikt.output.CliktConsole
+import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.arguments.multiple
 import org.jline.terminal.Terminal
 
 class CommandRegistry(private val term: Terminal, private val env: KremplEnvironment) {
     private val baseCommand = BaseCommand(term, env)
     private val aliases = mutableSetOf<Pair<String, String>>()
+    internal val helpRegistry = HelpRegistry()
+
+    init {
+        env.registry = this
+    }
 
     fun registerCommand(command: Command) {
         baseCommand.subcommands(command.cliktCommand)
         command.onRegister(env, term)
+        helpRegistry.registerCommand(command)
     }
 
     fun registerCommands(vararg commands: Command) {
@@ -41,7 +49,8 @@ class CommandRegistry(private val term: Terminal, private val env: KremplEnviron
         baseCommand.parse(args)
     }
 
-    private inner class BaseCommand(term: Terminal, env: KremplEnvironment) : CliktCommand(name = "") {
+    private inner class BaseCommand(term: Terminal, env: KremplEnvironment) : CliktCommand(name = "", printHelpOnEmptyArgs = false) {
+        private val eatArgs by argument().multiple()
         init {
             context {
                 console = object : CliktConsole {
@@ -59,17 +68,9 @@ class CommandRegistry(private val term: Terminal, private val env: KremplEnviron
             }
         }
 
-        override fun getFormattedHelp(): String {
-            return """
-            TODO
-        """.trimIndent()
-        }
+        override fun getFormattedHelp() = ""
 
-        override fun getFormattedUsage(): String {
-            return """
-            TODO
-        """.trimIndent()
-        }
+        override fun getFormattedUsage() = ""
 
         override fun run() {
             // do nothing
