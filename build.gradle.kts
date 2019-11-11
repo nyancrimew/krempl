@@ -26,7 +26,6 @@ allprojects {
             includeEngines("junit-jupiter")
         }
 
-        failFast = true
         testLogging {
             events = setOf(TestLogEvent.FAILED, TestLogEvent.PASSED, TestLogEvent.SKIPPED)
         }

@@ -1,84 +1,117 @@
 package ch.deletescape.krempl.utils
 
 /**
- * A matcher for simple patterns
+ * A matcher for simple patterns *(inspired by unix glob syntax)*
+ *
+ * # Syntax:
+ *
+ * Per default matching happens left (start) anchored, essentially calling [String.startsWith], with all escape sequences expanded.
+ * Available wildcards:
+ *  - `?` will match any **one** character.
+ *  - `*` on the other hand will matches any number of characters required to find the next known character. No backtracking happens.
+ * > Note: Prefixing a pattern with `*` will anchor it to the end, unless `*` is added to the end as well
+ *
+ * @param pattern A pattern following the mentioned syntax
  */
-// TODO: Implement inline * wildcard, matching everything until the next section starts matching
 class SimplePatternMatcher(pattern: CharSequence) {
     private val impl = compile(pattern)
 
+    /**
+     * Tests whether given [str] matches this pattern
+     */
     fun matches(str: CharSequence) = impl.matches(str)
 
     private interface MatcherImpl {
         fun matches(str: CharSequence): Boolean
     }
 
-    private class MatchAlwaysImpl(
-        private val match: Boolean
+    private class MatchMinLength(
+        private val minLength: Int
     ) : MatcherImpl {
-        override fun matches(str: CharSequence) = match
+        override fun matches(str: CharSequence) = str.length >= minLength
     }
 
-    private class SimpleMatcherImpl(
-        private val pattern: CharSequence,
-        private val anchorStart: Boolean,
-        private val anchorEnd: Boolean
+    private class StartMatcherImpl(
+        private val pattern: CharSequence
     ) : MatcherImpl {
-        override fun matches(str: CharSequence) = when {
-            anchorStart -> str.startsWith(pattern)
-            anchorEnd -> str.endsWith(pattern)
-            else -> str.contains(pattern)
-        }
+        override fun matches(str: CharSequence)= str.startsWith(pattern)
     }
 
-    private class SectionMatcherImpl(
-        private val sections: List<Section>,
+    private class TokenMatcherImpl(
+        private val tokens: List<Token>,
         private val totalLength: Int,
-        private val anchorStart: Boolean,
         private val anchorEnd: Boolean
     ) : MatcherImpl {
         override fun matches(str: CharSequence): Boolean {
             if (str.length < totalLength) return false
-            val stack = sections.toMutableList()
+            val tokenStack = tokens.toMutableList()
             val iter = str.iterator()
-            var sec = stack.removeAt(0)
-            var idx = 0
-            if (!anchorStart) {
-                // Seek to the first char that matches with the first sector
-                if (!sec.wildcard) {
-                    for (c in iter) {
-                        if (sec.matches(c, idx)) break
+            while (tokenStack.size > 0) {
+                var idx = 0
+                var tok = tokenStack.removeAt(0)
+
+                if (tok is Token.Wildcard && tok.length == -1) {
+                    // We match up to the end, return
+                    if (tokenStack.size == 0) return true
+
+                    var minChars = 0
+                    tok = tokenStack.removeAt(0)
+                    // Parse all sequential wildcard tokens at once, counting the minimum chars we need to skip
+                    var isLast = false
+                    while (tok is Token.Wildcard) {
+                        if (tok.length > 0) {
+                            minChars += tok.length
+                        }
+                        if (tokenStack.size == 0) {
+                            // We match up to the end, return
+                            if (minChars == 0) return true
+                            isLast = true
+                            break
+                        }
+                        tok = tokenStack.removeAt(0)
                     }
+                    var chars = 0
+                    while (iter.hasNext()) {
+                        if (tok.matches(iter.nextChar(), idx) && chars >= minChars) {
+                            // We match up to the end, return
+                            if (isLast) return true
+                            idx++
+                            break
+                        }
+                        chars++
+                    }
+                }
+                for (i in idx until tok.length) {
+                    if (!iter.hasNext()) return false
+                    if (!tok.matches(iter.nextChar(), i)) return false
                 }
             }
-            do {
-                if (stack.size == 0 && sec.wildcard) {
-                    return true
-                }
-                for (i in idx..sec.length) {
-                    if (!iter.hasNext()) return false
-                    // Fast path
-                    if (sec.wildcard) {
-                        iter.nextChar()
-                        continue
-                    }
-                    if (!sec.matches(iter.nextChar(), i)) return false
-                }
-                idx = 0
-                sec = stack.removeAt(0)
-            } while (stack.size >= 0)
-            // If we used up the stack but aren't at the end yet we count this as a match if we
-            return stack.size == 0 && (!iter.hasNext() || !anchorEnd)
+            return tokenStack.size == 0 && (!iter.hasNext() || !anchorEnd)
         }
     }
 
-    private class Section(
-        internal val length: Int,
-        private val content: CharArray? = null,
-        internal val wildcard: Boolean = false
+    private sealed class Token(
+        internal val length: Int
     ) {
-        fun matches(c: Char, i: Int) = wildcard || content?.getOrNull(i) == c
+        abstract fun matches(c: Char, i: Int): Boolean
+
+        class Wildcard(
+            length: Int
+        ): Token(length) {
+            override fun matches(c: Char, i: Int) = length == -1 || i < length
+        }
+
+        class Characters(
+            length: Int,
+            private val content: CharArray
+        ): Token(length){
+            override fun matches(c: Char, i: Int) = content.getOrNull(i) == c
+
+            // TODO: replace with concatToString once that isn't experimental anymore
+            fun getContent(): CharSequence = content.joinToString("")
+        }
     }
+
 
     companion object {
         private const val WILDCARD_CONT = '*'
@@ -90,67 +123,84 @@ class SimplePatternMatcher(pattern: CharSequence) {
             // If a pattern isn't anchored to the start it is automatically anchored to the end
             val anchoredEnd = !pattern.endsWith(WILDCARD_CONT) && !anchoredStart
 
-            // Remove surrounding wildcards
-            val sanitizedPattern = pattern.removePrefix("*").removeSuffix("*")
+            var lenTotal = 0
+            val tokens = mutableListOf<Token>()
+            var escapeFlag = false
+            var wildcardFlag = false
+            var tokenLen = 0
+            val content = mutableListOf<Char>()
+            fun newToken() {
+                if (tokenLen > 0) {
+                    tokens += if (wildcardFlag) {
+                        Token.Wildcard(tokenLen)
+                    } else Token.Characters(tokenLen, content.toCharArray())
+                } else if (wildcardFlag && tokenLen == -1) {
+                    tokens += Token.Wildcard(tokenLen)
+                    tokenLen = 0
+                }
 
-            return if (sanitizedPattern.contains(WILDCARD_SINGLE)) {
-                var lenTotal = 0
-                val sections = mutableListOf<Section>()
-                var escapeFlag = false
-                var wildcardFlag = false
-                var sectionLen = 0
-                val content = mutableListOf<Char>()
-                fun newSection() {
-                    if (sectionLen > 0) {
-                        sections += if (wildcardFlag) {
-                            Section(sectionLen, wildcard = true)
-                        } else Section(sectionLen, content = content.toCharArray())
-                    }
-                    lenTotal += sectionLen
-                    sectionLen = 0
-                    content.clear()
-                }
-                for (c in sanitizedPattern) {
-                    sectionLen++
-                    when (c) {
-                        ESCAPE_CHAR -> {
-                            if (escapeFlag) {
-                                content.add(c)
-                            } else {
-                                sectionLen--
-                                if (wildcardFlag) {
-                                    newSection()
-                                    wildcardFlag = false
-                                }
-                            }
-                            escapeFlag = !escapeFlag
-                        }
-                        WILDCARD_SINGLE -> {
-                            if (!wildcardFlag) {
-                                newSection()
-                                wildcardFlag = true
-                            } else if (escapeFlag) {
-                                content.add(c)
-                            }
-                        }
-                        else -> {
-                            if (wildcardFlag) {
-                                newSection()
-                                wildcardFlag = false
-                            }
-                            content.add(c)
-                        }
-                    }
-                }
-                newSection()
-                if (sections.size == 1) {
-                    if (sections.first().wildcard)
-                        MatchAlwaysImpl(true)
-                    else SimpleMatcherImpl(sanitizedPattern, anchoredStart, anchoredEnd)
-                } else SectionMatcherImpl(sections, lenTotal, anchoredStart, anchoredEnd)
-            } else {
-                SimpleMatcherImpl(sanitizedPattern, anchoredStart, anchoredEnd)
+                lenTotal += tokenLen
+                tokenLen = 1
+                content.clear()
             }
+            for (c in pattern) {
+                tokenLen++
+                when (c) {
+                    ESCAPE_CHAR -> {
+                        if (escapeFlag) {
+                            content.add(c)
+                        } else {
+                            tokenLen--
+                            if (wildcardFlag) {
+                                newToken()
+                                wildcardFlag = false
+                                tokenLen = 0
+                            }
+                        }
+                        escapeFlag = !escapeFlag
+                    }
+                    WILDCARD_SINGLE -> {
+                        if (escapeFlag) {
+                            content.add(c)
+                            escapeFlag = false
+                        } else if (!wildcardFlag) {
+                            tokenLen--
+                            newToken()
+                            wildcardFlag = true
+                        }
+                    }
+                    WILDCARD_CONT -> {
+                        if (escapeFlag) {
+                            content.add(c)
+                            escapeFlag = false
+                        } else {
+                            tokenLen--
+                            newToken()
+                            tokenLen = -1
+                            wildcardFlag = true
+                            newToken()
+                            wildcardFlag = false
+                            tokenLen = 0
+                        }
+                    }
+                    else -> {
+                        if (wildcardFlag) {
+                            tokenLen--
+                            newToken()
+                            wildcardFlag = false
+                        }
+                        escapeFlag = false
+                        content.add(c)
+                    }
+                }
+            }
+            newToken()
+            return if (tokens.size == 1) {
+                val token = tokens.first()
+                if (token is Token.Wildcard)
+                    MatchMinLength(token.length)
+                else StartMatcherImpl((token as Token.Characters).getContent())
+            } else TokenMatcherImpl(tokens, lenTotal, anchoredEnd)
         }
     }
 }

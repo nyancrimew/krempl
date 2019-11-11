@@ -9,4 +9,6 @@ dependencies {
 
     compile("com.kstruct:gethostname4j:0.0.3")
     compile("com.github.ajalt:clikt:2.2.0")
+
+    testImplementation("org.junit.jupiter:junit-jupiter:5.5.2")
 }
