@@ -20,7 +20,7 @@ data class KremplConfig(
         term = terminal(term, block)
     }
 
-    fun prompt(prompt: KremplEnvironment.() -> String) {
+    fun prompt(prompt: KremplEnvironment.() -> CharSequence) {
         this.prompt = Prompt(prompt)
     }
 

@@ -16,7 +16,8 @@ class Builtins {
             echo(),
             pwd(),
             whoami(),
-            cd()
+            cd(),
+            ls()
         )
 
 
